@@ -542,6 +542,8 @@ def upload_file(file_stream, filename, content_type, bucket):
 ############ START SCRIPT ###############
 '''
 # TODO: Clean up these variables with a config file
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/dev/Analysis-66668883776.json" # Change this to your key.json
+
 IMAGE_STORAGE_BUCKET = 'image_dump' # Change this to your image bucket
 AUDIO_STORAGE_BUCKET = 'speech_dump' # Change this to your speech bucket
 DOCUMENT_STORAGE_BUCKET = 'document_dump' # Change this to your document bucket
@@ -672,7 +674,6 @@ LANGUAGE = {
         "cmn-Hans-CN": "Mandarin Chinese (China)"
 }
         
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/dev/Analysis-66668883776.json" # Change this to your key.json
 category = {0: 'Unknown', 1: 'Very Unlikely', 2: 'Unlikely', 3: 'Possible', 4: 'Likely', 5: 'Very Likely'}
 
 if __name__ == '__main__':

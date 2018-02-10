@@ -74,8 +74,8 @@ help [translate, video, audio, image, lang]
 
 # Examples
 translate /home/dev/russian.txt
-audio /home/dev/audio.mp3
-audio gs://audio_bucket/audio.mp3
+audio en-US /home/dev/audio.mp3
+audio ru-RU gs://audio_bucket/audio.mp3
 image https://mysite.com/file.jpeg
 image /home/dev/file.png
 lang

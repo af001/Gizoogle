@@ -5,12 +5,44 @@ Experimentation with Google Cloud APIs. This is experimental and is only intende
 Note: The gsutils will be installed with the install script.
 1. Setup a project: https://cloud.google.com/dataproc/docs/guides/setup-project
 2. Take note of your project id
-3. Enable the APIS: Vision, VideoIntelligence, Speech, Translation
+3. Enable the APIS: Vision, VideoIntelligence, Speech, Translation, Storage
 4. Create a service account key and download to your computer
+5. In your project console, select IAM & admin and verify your service key account is a member of 'project owner'
 
 #### Download the repo and install dependencies 
 ```bash
-git clone 
+git clone https://github.com/af001/Gizoogle.git
+```
+
+1. Follow the instructions on the screen. You will be asked to provide your project id.
+2. At the end of the script, there are a number of additional commands you must run to setup your Google Cloud Buckets
+
+The following commands will be provided at the end of the script:
+
+```bash
+# Initialize gsutil; provide your project id when asked
+gsutil init
+
+# Create 4 new buckets - must have unique names
+gsutil mb gs://<a_video_bucket_name>
+gsutil mb gs://<a_audio_bucket_name>
+gsutil mb gs://<a_image_bucket_name>
+gsutil mb gs://<a_document_bucket_name>
+
+# Show the buckets
+gsutil ls
+
+# Change permissions to world readable for each bucket
+echo "gsutil iam ch allUsers:objectViewer gs://<video_bucket_name>
+echo "gsutil iam ch allUsers:objectViewer gs://<audio_bucket_name>
+echo "gsutil iam ch allUsers:objectViewer gs://<image_bucket_name>
+echo "gsutil iam ch allUsers:objectViewer gs://<document_bucket_name>
+
+# Set lifecycle to delete files older than 10 days in each bucket
+gsutil lifecycle set bucket_config.json gs://<video_bucket_name>
+gsutil lifecycle set bucket_config.json gs://<audio_bucket_name>
+gsutil lifecycle set bucket_config.json gs://<image_bucket_name>
+gsutil lifecycle set bucket_config.json gs://<document_bucket_name>
 ```
 
 #### Modify the python script to include your project specific information

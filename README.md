@@ -12,9 +12,12 @@ Note: The gsutils will be installed with the install script.
 #### Download the repo and install dependencies 
 ```bash
 git clone https://github.com/af001/Gizoogle.git
+cd Gizoogle
+chmod +x install.sh
+sudo ./install.sh
 ```
 
-1. Follow the instructions on the screen. You will be asked to provide your project id.
+1. Follow the instructions on the screen after running the ```bash sudo ./install.sh```
 2. At the end of the script, there are a number of additional commands you must run to setup your Google Cloud Buckets
 
 The following commands will be provided at the end of the script:
@@ -33,10 +36,10 @@ gsutil mb gs://<a_document_bucket_name>
 gsutil ls
 
 # Change permissions to world readable for each bucket
-echo "gsutil iam ch allUsers:objectViewer gs://<video_bucket_name>
-echo "gsutil iam ch allUsers:objectViewer gs://<audio_bucket_name>
-echo "gsutil iam ch allUsers:objectViewer gs://<image_bucket_name>
-echo "gsutil iam ch allUsers:objectViewer gs://<document_bucket_name>
+gsutil iam ch allUsers:objectViewer gs://<video_bucket_name>
+gsutil iam ch allUsers:objectViewer gs://<audio_bucket_name>
+gsutil iam ch allUsers:objectViewer gs://<image_bucket_name>
+gsutil iam ch allUsers:objectViewer gs://<document_bucket_name>
 
 # Set lifecycle to delete files older than 10 days in each bucket
 gsutil lifecycle set bucket_config.json gs://<video_bucket_name>

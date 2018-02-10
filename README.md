@@ -56,5 +56,25 @@ VIDEO_STORAGE_BUCKET = 'video_dump' # Change this to your video bucket
 PROJECT_ID = 'analysis-283736' # Change this to your project-ID
 ```
 
+#### Usage
+```bash
+python2.7 gizoogle.py
+```
 
+#### Terminal Usage:
+```python
+# Show help menu
+help
 
+# Show usage for each command
+help [translate, video, audio, image, lang]
+
+# Examples
+translate /home/dev/russian.txt
+audio /home/dev/audio.mp3
+audio gs://audio_bucket/audio.mp3
+image https://mysite.com/file.jpeg
+image /home/dev/file.png
+lang
+lang Arabic
+```

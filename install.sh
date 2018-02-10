@@ -14,13 +14,14 @@ echo "[+] You should see ffmpeg and python2.7 installed!!!"
 python --version
 ffmpeg -version | grep ffmpeg
 echo
+echo "[+] Create a project on the Google Cloud Platform"
+echo "[+] Create a service account key (json): APIs & Services --> Credentials"
+echo "[+] Put the key in your project path"
+echo 
 echo "[+] Downloading and installing gsutils"
 curl https://sdk.cloud.google.com | bash
 exec -l $SHELL
 echo
-echo "[+] Create a project on the Google Cloud Platform"
-echo "[+] Create a service account key (json): APIs & Services --> Credentials"
-echo "[+] Put the key in your project path"
 echo "[+] Run the following commands from the terminal:"
 
 echo "# Initialize gsutil"

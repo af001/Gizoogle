@@ -102,11 +102,17 @@ class GooglePrompt(Cmd):
     '''
     # Transcribe an audio file and attempt to auto-translate to english
     Usage:
-        audio <gs://<bucket>/file.flac : Analyze a FLAC file in your bucket
-        audio /home/devnet/file.mp3    : Convert, upload, and analyze
+        lang                                       : Show a list of language codes
+        lang Russian                               : Find the russian language code
+        audio <lang_code> <gs://<bucket>/file.flac : Analyze a FLAC file in your bucket
+        audio <lang_code> /home/devnet/file.mp3    : Convert, upload, and analyze
     '''
-    def do_audio(self, path):    
+    def do_audio(self, arg):    
         opening_label('# AUDIO TRANSCRIPTION')
+        
+        x = arg.split(' ')     
+        code = x[0]
+        path = x[1]
         
         # Instantiate a speech client
         client = speech.SpeechClient()
@@ -117,9 +123,9 @@ class GooglePrompt(Cmd):
         # bucket gs://bucket_name/file.flac
         if path.startswith('gs:') and path.endswith('flac'):
             try:
-                resp = analyze_audio(path, client)
+                resp = analyze_audio(path, client, code)
             except:
-                resp = try_long_run(path, client)
+                resp = try_long_run(path, client, code)
         else:
             # Convert the audio to FLAC and upload to audio bucket. Assuming
             # the file is not FLAC here. Save the file in the same path.
@@ -136,9 +142,9 @@ class GooglePrompt(Cmd):
                 if url is not '':
                     gs_file = url.split("/")[-1]
                     try:
-                        resp = analyze_audio('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client)
+                        resp = analyze_audio('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
                     except:
-                        resp = try_long_run('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client)
+                        resp = try_long_run('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
         
         # Auto-determine the language, translate, and transcribe in english.
         # Notify the user if a translation occured, the language detected,
@@ -170,7 +176,7 @@ class GooglePrompt(Cmd):
         help audio
     '''
     def help_audio(self):
-        print('audio <gs://<bucket_name>\naudio <local_path>\nSpeech analysis using Google Speech')
+        print('audio <lang_code><gs://<bucket_name>\naudio <lang_code> <local_path>\nSpeech analysis using Google Speech')
     
     
     def do_video(self, path):
@@ -288,14 +294,14 @@ def analyze_image(URL, client):
 '''
 # Analyze a long audio file and return the Google Speech API response
 '''
-def try_long_run(URL, client):
+def try_long_run(URL, client, code):
     audio = types.RecognitionAudio(uri=URL)
 
     config = types.RecognitionConfig(
             encoding=enums.RecognitionConfig.AudioEncoding.FLAC,
             profanity_filter=False,
             sample_rate_hertz=44100,
-            language_code='ru-RU')
+            language_code=code)
     
     operation = client.long_running_recognize(config, audio)
     
@@ -304,14 +310,14 @@ def try_long_run(URL, client):
 '''
 # Analyze a converted FLAC file and return the Google Speech API response
 '''
-def analyze_audio(URL, client):
+def analyze_audio(URL, client, code):
     audio = types.RecognitionAudio(uri=URL)
 
     config = types.RecognitionConfig(
             encoding='FLAC',
             profanity_filter=False,
             sample_rate_hertz=44100,
-            language_code='ru-RU')
+            language_code=code)
 
     response = client.recognize(config, audio)
     return response

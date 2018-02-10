@@ -1,8 +1,17 @@
 # Gizoogle
-Experimentation with Google Cloud APIs 
+Experimentation with Google Cloud APIs. This is experimental and is only intended for educational purposes. Code is provided as is. If you are interested in modifying the code, send a pull request. 
 
 #### Create a new project under the Google Cloud Platform Console
+Note: The gsutils will be installed with the install script.
+1. Setup a project: https://cloud.google.com/dataproc/docs/guides/setup-project
+2. Take note of your project id
+3. Enable the APIS: Vision, VideoIntelligence, Speech, Translation
+4. Create a service account key and download to your computer
 
+#### Download the repo and install dependencies 
+```bash
+git clone 
+```
 
 #### Modify the python script to include your project specific information
 ```python

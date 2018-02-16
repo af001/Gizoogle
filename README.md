@@ -91,3 +91,6 @@ video ru-RU gs://video_bucket/video.mp4
 3. Add query feature to query analyzed files
 4. Remove stopwords from translations; determine key words and store in BigTable -> link to files in buckets
 5. Integrate NLP and custom ML algorithms
+6. Do video analysis, convert to audio, translate, transcribe 
+
+

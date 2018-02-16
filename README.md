@@ -85,3 +85,9 @@ lang Arabic
 video en-US /home/dev/video.mp4
 video ru-RU gs://video_bucket/video.mp4
 ```
+#### In Development:
+1. Add autodetect file format and analyze
+2. Store files, translations, and analysis in BigTable
+3. Add query feature to query analyzed files
+4. Remove stopwords from translations; determine key words and store in BigTable -> link to files in buckets
+5. Integrate NLP and custom ML algorithms

@@ -3,27 +3,35 @@
 ## GizOOgle Insatll Script
 ## Rev. 1.0a
 
+# Update linux
 apt-get update && apt-get -y upgrade
 apt-get -y install python python-pip ffmpeg build-essential
 
+# Install Python packages --> change to requirments.txt
 echo "[+] Installing Python packages..."
 pip install --upgrade setuptools google-cloud-speech google-cloud-videointelligence google-cloud-vision google-cloud-storage google-cloud-translate pyfiglet Werkzeug six ffmpeg-python curl
 
+# Verify ffmpeg and python are installed and in your path
 echo
 echo "[+] You should see ffmpeg and python2.7 installed!!!"
 python --version
 ffmpeg -version | grep ffmpeg
 echo
+
+# Create a Google Cloud Platform project and credential file
 echo "[+] Create a project on the Google Cloud Platform"
 echo "[+] Create a service account key (json): APIs & Services --> Credentials"
 echo "[+] Put the key in your project path"
 echo 
+
+# Install gsutil command line tools and install
 echo "[+] Downloading and installing gsutils"
 curl https://sdk.cloud.google.com | bash
 exec -l $SHELL
 echo
 echo "[+] Run the following commands from the terminal:"
 
+# Initialize gsutil and create buckets with the appropriate permissions
 echo "# Initialize gsutil"
 echo "gsutil init"
 echo

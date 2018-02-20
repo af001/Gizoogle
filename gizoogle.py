@@ -7,7 +7,7 @@
 # export GOOGLE_APPLICATION_CREDENTIALS="/path/to/keyfile.json"
 #
 #
-# CAO: 1826 February 4th, 2017
+# CAO: 1826 February 18th, 2017
 #
 #################################################################
 
@@ -683,13 +683,13 @@ def upload_file(file_stream, filename, content_type, bucket):
 ############ START SCRIPT ###############
 '''
 # TODO: Clean up these variables with a config file --> maybe flask??
-IMAGE_STORAGE_BUCKET = 'image_dump_0'
-AUDIO_STORAGE_BUCKET = 'speech_dump_0'
-DOCUMENT_STORAGE_BUCKET = 'document_dump_0'
-VIDEO_STORAGE_BUCKET = 'video_dump_0'
+IMAGE_STORAGE_BUCKET = 'image_dump'
+AUDIO_STORAGE_BUCKET = 'speech_dump'
+DOCUMENT_STORAGE_BUCKET = 'document_dump'
+VIDEO_STORAGE_BUCKET = 'video_dump'
 MAX_CONTENT_LENGTH = 8 * 1024 * 1024
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'flac', 'txt', 'mov', 'mp4', 'mpeg4', 'avi'])
-PROJECT_ID = 'analysis-194418'
+PROJECT_ID = 'analysis-11111'
 LANGUAGE = {
         "af-ZA": "Afrikaans (South Africa)", 
         "am-ET": "Amharic (Ethiopia)", 
@@ -812,7 +812,7 @@ LANGUAGE = {
         "cmn-Hans-CN": "Mandarin Chinese (China)"
 }
         
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/devnet/Downloads/Analysis-666680c8f996.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/devnet/Downloads/creds.json"
 category = {0: 'Unknown', 1: 'Very Unlikely', 2: 'Unlikely', 3: 'Possible', 4: 'Likely', 5: 'Very Likely'}
 
 if __name__ == '__main__':

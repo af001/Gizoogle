@@ -102,30 +102,28 @@ class GooglePrompt(Cmd):
     '''
     # Transcribe an audio file and attempt to auto-translate to english
     Usage:
-        lang                                       : Show a list of language codes
-        lang Russian                               : Find the russian language code
-        audio <lang_code> <gs://<bucket>/file.flac : Analyze a FLAC file in your bucket
-        audio <lang_code> /home/devnet/file.mp3    : Convert, upload, and analyze
+        audio <gs://<bucket>/file.flac : Analyze a FLAC file in your bucket
+        audio /home/devnet/file.mp3    : Convert, upload, and analyze
     '''
     def do_audio(self, arg):    
         opening_label('# AUDIO TRANSCRIPTION')
         
-        x = arg.split(' ')     
+        x = arg.split(' ')
+        
         code = x[0]
         path = x[1]
-        
+                      
         # Instantiate a speech client
         client = speech.SpeechClient()
-        resp = None
         
         # Determine if the file is remote or local. If the file is large,
         # then use try_long_run. File must be flac if remote, and in the 
         # bucket gs://bucket_name/file.flac
         if path.startswith('gs:') and path.endswith('flac'):
             try:
-                resp = analyze_audio(path, client, code)
+                analyze_audio(path, client, code)
             except:
-                resp = try_long_run(path, client, code)
+                try_long_run(path, client, code)
         else:
             # Convert the audio to FLAC and upload to audio bucket. Assuming
             # the file is not FLAC here. Save the file in the same path.
@@ -142,48 +140,71 @@ class GooglePrompt(Cmd):
                 if url is not '':
                     gs_file = url.split("/")[-1]
                     try:
-                        resp = analyze_audio('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
+                        analyze_audio('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
                     except:
-                        resp = try_long_run('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
+                        try_long_run('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
         
-        # Auto-determine the language, translate, and transcribe in english.
-        # Notify the user if a translation occured, the language detected,
-        # and the confidence level that the audio is that language.
-        if resp is not None:
-            client = translate.Client()           
-            lang = client.detect_language(resp.results[0].alternatives[0].transcript)
- 
-            if lang['language'] is not 'en':
-                print('[!] Audio is translated!!')
-                print('Language   : {}\nConfidence : {}%'.format(lang['language'], round(lang['confidence']*100),2))
-                
-                translated = []
-                for x in range(len(resp.results)):
-                    lang = client.translate(resp.results[x].alternatives[0].transcript)
-                    translated.append(lang['translatedText'])
-
-                print('\n[+] Transcript: {}'.format(' '.join(translated)))
-            else:
-                print('\n[+] Transcript: {}'.format(resp.results[0].alternatives[0].transcript))
-            
-            
-        else:
-            print('\n[!] Error processing audio file...\n')
-    
     '''
     # Display information about the do_audio command
     Usage:
         help audio
     '''
     def help_audio(self):
-        print('audio <lang_code><gs://<bucket_name>\naudio <lang_code> <local_path>\nSpeech analysis using Google Speech')
+        print('audio <lang_code> <gs://<bucket_name>/<file_name>>\naudio <lang_code> <local_path>\nSpeech analysis using Google Speech')
     
-    
-    def do_video(self, path):
-        if path.startswith('http') or path.startswith('gs:'):
-            pass # TODO: Fetch URL, convert to mp3 if video, translate
+        '''
+    # Analyze a video file and attempt to auto-translate and transcribe to english
+    Usage:
+        video <gs://<bucket>/file.mp4  : Analyze a FLAC file in your bucket
+        video /home/devnet/file.avi    : Convert, upload, and analyze
+    '''
+    def do_video(self, arg):
+        opening_label('# VIDEO ANALYSIS')
+                      
+        x = arg.split(' ')
+        
+        code = x[0]
+        path = x[1]
+        
+        # Instantiate a videointelligence client
+        client = videointelligence.VideoIntelligenceServiceClient()
+        
+        # If the video is already uploaded, process the file. If the file is
+        # local, upload the video and process. 
+        if path.startswith('gs:'):
+            analyze_video(path, client)
         else:
-            pass # TODO: Read file, convert to mp3 if video, translate
+            with open(path, 'rb') as fp:
+                video = FileStorage(fp)
+                url = upload_file(video.read(), video.filename, video.content_type, VIDEO_STORAGE_BUCKET)
+                if url is not '':
+                    gs_file = url.split("/")[-1]
+                    analyze_video('gs://'+VIDEO_STORAGE_BUCKET+'/'+gs_file, client)
+
+            # Convert the video file to a FLAC audio file. Analyze the content,
+            # translate, and transcribe
+            base = os.path.splitext(path)[0]
+            new_path = base + '.flac'
+            convert_to_flac(path, new_path)
+            
+            with open(new_path, 'rb') as fp:
+                audio = FileStorage(fp)
+                url = upload_file(audio.read(), audio.filename, audio.content_type, AUDIO_STORAGE_BUCKET)
+                if url is not '':
+                    gs_file = url.split("/")[-1]
+                    try:
+                        analyze_audio('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
+                    except:
+                        try_long_run('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
+                    
+    '''
+    # Display information about the do_audio command
+    Usage:
+        help video
+    '''
+    def help_video(self):
+        print('video <lang_code> <gs://<bucket_name>/<file_name>>\nvideo <lang_code> <local_path>\nAnalyze video with Google Intelligence API')
+
 
     '''
     # Translate a document locally or one on the Internet
@@ -282,9 +303,80 @@ def opening_label(labl):
     print('\n++++++++++++++++++++++++++++++++++++++++++')
     print(labl)
     print('++++++++++++++++++++++++++++++++++++++++++\n')
+    
+'''
+# Analyze a video and print the Google Video Intelligence API response
+'''
+def analyze_video(URL, client):
+    """Detect labels given a file path."""
+    features = [videointelligence.enums.Feature.LABEL_DETECTION]
+
+    operation = client.annotate_video(URL, features=features)
+    
+    print('\nProcessing video for label annotations:')
+
+    result = operation.result(timeout=3600)
+    print('\nFinished processing.')
+
+    # Process video/segment level label annotations
+    segment_labels = result.annotation_results[0].segment_label_annotations
+    for i, segment_label in enumerate(segment_labels):
+        print('Video label description: {}'.format(
+            segment_label.entity.description))
+        for category_entity in segment_label.category_entities:
+            print('\tLabel category description: {}'.format(
+                category_entity.description))
+
+        for i, segment in enumerate(segment_label.segments):
+            start_time = (segment.segment.start_time_offset.seconds +
+                          segment.segment.start_time_offset.nanos / 1e9)
+            end_time = (segment.segment.end_time_offset.seconds +
+                        segment.segment.end_time_offset.nanos / 1e9)
+            positions = '{}s to {}s'.format(start_time, end_time)
+            confidence = segment.confidence
+            print('\tSegment {}: {}'.format(i, positions))
+            print('\tConfidence: {}'.format(confidence))
+        print('\n')
+
+    # Process shot level label annotations
+    shot_labels = result.annotation_results[0].shot_label_annotations
+    for i, shot_label in enumerate(shot_labels):
+        print('Shot label description: {}'.format(
+            shot_label.entity.description))
+        for category_entity in shot_label.category_entities:
+            print('\tLabel category description: {}'.format(
+                category_entity.description))
+
+        for i, shot in enumerate(shot_label.segments):
+            start_time = (shot.segment.start_time_offset.seconds +
+                          shot.segment.start_time_offset.nanos / 1e9)
+            end_time = (shot.segment.end_time_offset.seconds +
+                        shot.segment.end_time_offset.nanos / 1e9)
+            positions = '{}s to {}s'.format(start_time, end_time)
+            confidence = shot.confidence
+            print('\tSegment {}: {}'.format(i, positions))
+            print('\tConfidence: {}'.format(confidence))
+        print('\n')
+
+    # Process frame level label annotations
+    frame_labels = result.annotation_results[0].frame_label_annotations
+    for i, frame_label in enumerate(frame_labels):
+        print('Frame label description: {}'.format(
+            frame_label.entity.description))
+        for category_entity in frame_label.category_entities:
+            print('\tLabel category description: {}'.format(
+                category_entity.description))
+
+        # Each frame_label_annotation has many frames,
+        # here we print information only about the first frame.
+        frame = frame_label.frames[0]
+        time_offset = frame.time_offset.seconds + frame.time_offset.nanos / 1e9
+        print('\tFirst frame time offset: {}s'.format(time_offset))
+        print('\tFirst frame confidence: {}'.format(frame.confidence))
+        print('\n')
 
 '''
-# Analyze an image and return the Google Image API response
+# Analyze an image and print the Google Image API response
 '''
 def analyze_image(URL, client):
     request = {'image': {'source': {'image_uri': URL},},}
@@ -292,9 +384,12 @@ def analyze_image(URL, client):
     return response
 
 '''
-# Analyze a long audio file and return the Google Speech API response
+# Analyze a long audio file and print the Google Speech API response
 '''
 def try_long_run(URL, client, code):
+    # Auto-determine the language, translate, and transcribe in english.
+    # Notify the user if a translation occured, the language detected,
+    # and the confidence level that the audio is that language.
     audio = types.RecognitionAudio(uri=URL)
 
     config = types.RecognitionConfig(
@@ -304,13 +399,35 @@ def try_long_run(URL, client, code):
             language_code=code)
     
     operation = client.long_running_recognize(config, audio)
+    resp = operation.result()
     
-    return operation.result()
+    if resp is not None:
+        client = translate.Client()           
+        lang = client.detect_language(resp.results[0].alternatives[0].transcript)
+ 
+        if lang['language'] is not 'en':
+            print('[!] Audio is translated!!')
+            print('Language   : {}\nConfidence : {}%'.format(lang['language'], round(lang['confidence']*100),2))
+
+            translated = []
+            for x in range(len(resp.results)):
+                lang = client.translate(resp.results[x].alternatives[0].transcript)
+                translated.append(lang['translatedText'])
+
+            print('\n[+] Transcript: {}'.format(' '.join(translated)))
+        else:
+            print('\n[+] Transcript: {}'.format(resp.results[0].alternatives[0].transcript))
+    else:
+        print('\n[!] Error processing audio file...\n')
+
 
 '''
 # Analyze a converted FLAC file and return the Google Speech API response
 '''
 def analyze_audio(URL, client, code):
+    # Auto-determine the language, translate, and transcribe in english.
+    # Notify the user if a translation occured, the language detected,
+    # and the confidence level that the audio is that language.
     audio = types.RecognitionAudio(uri=URL)
 
     config = types.RecognitionConfig(
@@ -319,8 +436,26 @@ def analyze_audio(URL, client, code):
             sample_rate_hertz=44100,
             language_code=code)
 
-    response = client.recognize(config, audio)
-    return response
+    resp = client.recognize(config, audio)
+    
+    if resp is not None:
+        client = translate.Client()           
+        lang = client.detect_language(resp.results[0].alternatives[0].transcript)
+ 
+        if lang['language'] is not 'en':
+            print('[!] Audio is translated!!')
+            print('Language   : {}\nConfidence : {}%'.format(lang['language'], round(lang['confidence']*100),2))
+
+            translated = []
+            for x in range(len(resp.results)):
+                lang = client.translate(resp.results[x].alternatives[0].transcript)
+                translated.append(lang['translatedText'])
+
+            print('\n[+] Transcript: {}'.format(' '.join(translated)))
+        else:
+            print('\n[+] Transcript: {}'.format(resp.results[0].alternatives[0].transcript))
+    else:
+        print('\n[!] Error processing audio file...\n')
 
 '''
 # Detect faces in an image and attempt to identify features that indicate
@@ -547,17 +682,14 @@ def upload_file(file_stream, filename, content_type, bucket):
 '''
 ############ START SCRIPT ###############
 '''
-# TODO: Clean up these variables with a config file
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/dev/Analysis-66668883776.json" # Change this to your key.json
-
-IMAGE_STORAGE_BUCKET = 'image_dump' # Change this to your image bucket
-AUDIO_STORAGE_BUCKET = 'speech_dump' # Change this to your speech bucket
-DOCUMENT_STORAGE_BUCKET = 'document_dump' # Change this to your document bucket
-VIDEO_STORAGE_BUCKET = 'video_dump' # Change this to your video bucket
-PROJECT_ID = 'analysis-283736' # Change this to your project-ID
-
+# TODO: Clean up these variables with a config file --> maybe flask??
+IMAGE_STORAGE_BUCKET = 'image_dump_0'
+AUDIO_STORAGE_BUCKET = 'speech_dump_0'
+DOCUMENT_STORAGE_BUCKET = 'document_dump_0'
+VIDEO_STORAGE_BUCKET = 'video_dump_0'
 MAX_CONTENT_LENGTH = 8 * 1024 * 1024
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'flac', 'txt'])
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'flac', 'txt', 'mov', 'mp4', 'mpeg4', 'avi'])
+PROJECT_ID = 'analysis-194418'
 LANGUAGE = {
         "af-ZA": "Afrikaans (South Africa)", 
         "am-ET": "Amharic (Ethiopia)", 
@@ -680,6 +812,7 @@ LANGUAGE = {
         "cmn-Hans-CN": "Mandarin Chinese (China)"
 }
         
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/devnet/Downloads/Analysis-666680c8f996.json"
 category = {0: 'Unknown', 1: 'Very Unlikely', 2: 'Unlikely', 3: 'Possible', 4: 'Likely', 5: 'Very Likely'}
 
 if __name__ == '__main__':

@@ -101,8 +101,8 @@ class GooglePrompt(Cmd):
     '''
     # Transcribe an audio file and attempt to auto-translate to english
     Usage:
-        audio <gs://<bucket>/file.flac : Analyze a FLAC file in your bucket
-        audio /home/devnet/file.mp3    : Convert, upload, and analyze
+        audio <lang> <gs://<bucket>/file.flac : Analyze a FLAC file in your bucket
+        audio <lang> /home/devnet/file.mp3    : Convert, upload, and analyze
     '''
     def do_audio(self, arg):    
         opening_label('# AUDIO TRANSCRIPTION')
@@ -154,8 +154,8 @@ class GooglePrompt(Cmd):
         '''
     # Analyze a video file and attempt to auto-translate and transcribe to english
     Usage:
-        video <gs://<bucket>/file.mp4  : Analyze a FLAC file in your bucket
-        video /home/devnet/file.avi    : Convert, upload, and analyze
+        video <lang> <gs://<bucket>/file.mp4  : Analyze a FLAC file in your bucket
+        video <lang> /home/devnet/file.avi    : Convert, upload, and analyze
     '''
     def do_video(self, arg):
         opening_label('# VIDEO ANALYSIS')

@@ -80,9 +80,7 @@ image https://mysite.com/file.jpeg
 image /home/dev/file.png
 lang
 lang Arabic
-
-# TODO: Add video support --> analyze video, convert to audio, transcribe, translate, output translated audio as txt
-video en-US /home/dev/video.mp4
+video en-US /home/dev/video.mp4           # use mp4 for best results
 video ru-RU gs://video_bucket/video.mp4
 ```
 #### In Development:

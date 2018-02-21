@@ -7,7 +7,7 @@
 # export GOOGLE_APPLICATION_CREDENTIALS="/path/to/keyfile.json"
 #
 #
-# CAO: 1826 February 18th, 2017
+# CAO: 1826 February 4th, 2017
 #
 #################################################################
 
@@ -18,8 +18,8 @@ import re
 import os
 import six
 import datetime
-import ffmpeg
 
+from ffmpy import FFmpeg
 from cmd import Cmd
 from pyfiglet import Figlet
 from google.cloud.vision_v1 import ImageAnnotatorClient
@@ -181,16 +181,30 @@ class GooglePrompt(Cmd):
                     gs_file = url.split("/")[-1]
                     analyze_video('gs://'+VIDEO_STORAGE_BUCKET+'/'+gs_file, client)
 
-            # Convert the video file to a FLAC audio file. Analyze the content,
-            # translate, and transcribe
+            # Convert the video file to a mp4, then convert the video file
+            # to FLAC. Unable to directly convert some formats to FLAC, so 
+            # first convert to mp4, then FLAC.
             base = os.path.splitext(path)[0]
-            new_path = base + '.flac'
-            convert_to_flac(path, new_path)
             
-            with open(new_path, 'rb') as fp:
+            # There is a bug with some video to audio conversions. This primarily
+            # occurs when converting avi to mp4, then from mp4 to FLAC.
+            # TODO: Fix alternative video formats to FLAC
+            if not path.endswith('mp4') or not path.endswith('MP4'):
+                new_path = base + '.mp4'
+                convert_to_mp4(path, new_path)
+            else:
+                new_path = path
+            
+            # Convert the mp4 to FLAC
+            new_path_audio = base + '.flac'
+            convert_to_audio(new_path, new_path_audio)
+            
+            # Analyze the FLAC and transcribe.
+            with open(new_path_audio, 'rb') as fp:
                 audio = FileStorage(fp)
                 url = upload_file(audio.read(), audio.filename, audio.content_type, AUDIO_STORAGE_BUCKET)
                 if url is not '':
+                    client = speech.SpeechClient()
                     gs_file = url.split("/")[-1]
                     try:
                         analyze_audio('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
@@ -204,7 +218,6 @@ class GooglePrompt(Cmd):
     '''
     def help_video(self):
         print('video <lang_code> <gs://<bucket_name>/<file_name>>\nvideo <lang_code> <local_path>\nAnalyze video with Google Intelligence API')
-
 
     '''
     # Translate a document locally or one on the Internet
@@ -286,10 +299,23 @@ class GooglePrompt(Cmd):
 # Overwrite any existing file that exists locally with the new one
 '''
 def convert_to_flac(old, new):
-    stream = ffmpeg.input(old)
-    stream = ffmpeg.output(stream, new, ac=1).overwrite_output()
-    ffmpeg.run(stream)
-
+    ff = FFmpeg(
+            inputs={old: None},
+            outputs={new: '-ac 1'})
+    ff.run()
+    
+def convert_to_audio(old, new):
+    ff = FFmpeg(
+            inputs={old: None},
+            outputs={new: '-acodec flac -ac 1 -bits_per_raw_sample 16 -ar 44100'})
+    ff.run()
+    
+def convert_to_mp4(old, new):
+   ff = FFmpeg(
+           inputs={old: None},
+           outputs={new: None})
+   ff.run()   
+    
 '''
 # Check if a referenced local file exists before performing operations
 '''
@@ -683,13 +709,13 @@ def upload_file(file_stream, filename, content_type, bucket):
 ############ START SCRIPT ###############
 '''
 # TODO: Clean up these variables with a config file --> maybe flask??
-IMAGE_STORAGE_BUCKET = 'image_dump'
-AUDIO_STORAGE_BUCKET = 'speech_dump'
-DOCUMENT_STORAGE_BUCKET = 'document_dump'
-VIDEO_STORAGE_BUCKET = 'video_dump'
+IMAGE_STORAGE_BUCKET = 'image_dump_0'
+AUDIO_STORAGE_BUCKET = 'speech_dump_0'
+DOCUMENT_STORAGE_BUCKET = 'document_dump_0'
+VIDEO_STORAGE_BUCKET = 'video_dump_0'
 MAX_CONTENT_LENGTH = 8 * 1024 * 1024
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'flac', 'txt', 'mov', 'mp4', 'mpeg4', 'avi'])
-PROJECT_ID = 'analysis-11111'
+PROJECT_ID = 'analysis-194418'
 LANGUAGE = {
         "af-ZA": "Afrikaans (South Africa)", 
         "am-ET": "Amharic (Ethiopia)", 
@@ -812,7 +838,7 @@ LANGUAGE = {
         "cmn-Hans-CN": "Mandarin Chinese (China)"
 }
         
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/devnet/Downloads/creds.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/devnet/Downloads/Analysis-666680c8f996.json"
 category = {0: 'Unknown', 1: 'Very Unlikely', 2: 'Unlikely', 3: 'Possible', 4: 'Likely', 5: 'Very Likely'}
 
 if __name__ == '__main__':
@@ -831,5 +857,4 @@ if __name__ == '__main__':
     #     4. Create a do_query that allows you to search all output
     #        a. Show the files, text, etc related to the query
 
-            
-            
+       

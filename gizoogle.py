@@ -1,7 +1,9 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 #
-# Giz00gle - Google API Testing and Evaluation
+# Giz00gle - Google API Testing and Evaluation. The primary libraries
+# that are tested incldue the Google Speech API, VideoIntelligence API
+# Translation API, and Image API
 #
 # CAO: February 20th, 2017
 #

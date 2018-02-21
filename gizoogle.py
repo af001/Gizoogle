@@ -1,13 +1,9 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-# To authenticate, download your json keyfile from your account.
-# Once done, run the following command in a terminal, or set the
-# export in your ~/.bashrc or ~/.profile
-# export GOOGLE_APPLICATION_CREDENTIALS="/path/to/keyfile.json"
-#
-#
-# CAO: 1826 February 4th, 2017
+# 
+# Giz00gle - Google API Testing and Evaluation
+# CAO: February 20th, 2017
 #
 #################################################################
 

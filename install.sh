@@ -9,7 +9,7 @@ apt-get -y install python python-pip ffmpeg build-essential
 
 # Install Python packages --> change to requirments.txt
 echo "[+] Installing Python packages..."
-pip install --upgrade setuptools google-cloud-speech google-cloud-videointelligence google-cloud-vision google-cloud-storage google-cloud-translate pyfiglet Werkzeug six ffmpeg-python curl
+pip install --upgrade setuptools google-cloud-speech google-cloud-videointelligence google-cloud-vision google-cloud-storage google-cloud-translate pyfiglet Werkzeug ffmpy six curl
 
 # Verify ffmpeg and python are installed and in your path
 echo

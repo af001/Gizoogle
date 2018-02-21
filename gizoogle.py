@@ -1,8 +1,8 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-
-# 
+#
 # Giz00gle - Google API Testing and Evaluation
+#
 # CAO: February 20th, 2017
 #
 #################################################################
@@ -185,12 +185,12 @@ class GooglePrompt(Cmd):
             # There is a bug with some video to audio conversions. This primarily
             # occurs when converting avi to mp4, then from mp4 to FLAC.
             # TODO: Fix alternative video formats to FLAC
-            if not path.endswith('mp4') or not path.endswith('MP4'):
+            if path.endswith('.mp4') or path.endswith('.MP4'):
+                new_path = path
+            else:
                 new_path = base + '.mp4'
                 convert_to_mp4(path, new_path)
-            else:
-                new_path = path
-            
+
             # Convert the mp4 to FLAC
             new_path_audio = base + '.flac'
             convert_to_audio(new_path, new_path_audio)
@@ -292,20 +292,25 @@ class GooglePrompt(Cmd):
 
 '''
 # Convert an audio or video file into FLAC and set limit channels to 1
-# Overwrite any existing file that exists locally with the new one
 '''
 def convert_to_flac(old, new):
     ff = FFmpeg(
             inputs={old: None},
             outputs={new: '-ac 1'})
     ff.run()
-    
+
+'''
+# Convert an video file to flac
+'''  
 def convert_to_audio(old, new):
     ff = FFmpeg(
             inputs={old: None},
             outputs={new: '-acodec flac -ac 1 -bits_per_raw_sample 16 -ar 44100'})
     ff.run()
-    
+ 
+'''
+# Convert video file to mp4 video
+'''
 def convert_to_mp4(old, new):
    ff = FFmpeg(
            inputs={old: None},
@@ -334,11 +339,7 @@ def analyze_video(URL, client):
     features = [videointelligence.enums.Feature.LABEL_DETECTION]
 
     operation = client.annotate_video(URL, features=features)
-    
-    print('\nProcessing video for label annotations:')
-
     result = operation.result(timeout=3600)
-    print('\nFinished processing.')
 
     # Process video/segment level label annotations
     segment_labels = result.annotation_results[0].segment_label_annotations
@@ -346,7 +347,7 @@ def analyze_video(URL, client):
         print('Video label description: {}'.format(
             segment_label.entity.description))
         for category_entity in segment_label.category_entities:
-            print('\tLabel category description: {}'.format(
+            print('Label category description: {}'.format(
                 category_entity.description))
 
         for i, segment in enumerate(segment_label.segments):
@@ -356,9 +357,9 @@ def analyze_video(URL, client):
                         segment.segment.end_time_offset.nanos / 1e9)
             positions = '{}s to {}s'.format(start_time, end_time)
             confidence = segment.confidence
-            print('\tSegment {}: {}'.format(i, positions))
-            print('\tConfidence: {}'.format(confidence))
-        print('\n')
+            print('Segment {}: {}'.format(i, positions))
+            print('Confidence: {}'.format(confidence))
+        print('')
 
     # Process shot level label annotations
     shot_labels = result.annotation_results[0].shot_label_annotations
@@ -366,7 +367,7 @@ def analyze_video(URL, client):
         print('Shot label description: {}'.format(
             shot_label.entity.description))
         for category_entity in shot_label.category_entities:
-            print('\tLabel category description: {}'.format(
+            print('Label category description: {}'.format(
                 category_entity.description))
 
         for i, shot in enumerate(shot_label.segments):
@@ -376,9 +377,9 @@ def analyze_video(URL, client):
                         shot.segment.end_time_offset.nanos / 1e9)
             positions = '{}s to {}s'.format(start_time, end_time)
             confidence = shot.confidence
-            print('\tSegment {}: {}'.format(i, positions))
-            print('\tConfidence: {}'.format(confidence))
-        print('\n')
+            print('Segment {}: {}'.format(i, positions))
+            print('Confidence: {}'.format(confidence))
+        print('')
 
     # Process frame level label annotations
     frame_labels = result.annotation_results[0].frame_label_annotations
@@ -386,16 +387,16 @@ def analyze_video(URL, client):
         print('Frame label description: {}'.format(
             frame_label.entity.description))
         for category_entity in frame_label.category_entities:
-            print('\tLabel category description: {}'.format(
+            print('Label category description: {}'.format(
                 category_entity.description))
 
         # Each frame_label_annotation has many frames,
         # here we print information only about the first frame.
         frame = frame_label.frames[0]
         time_offset = frame.time_offset.seconds + frame.time_offset.nanos / 1e9
-        print('\tFirst frame time offset: {}s'.format(time_offset))
-        print('\tFirst frame confidence: {}'.format(frame.confidence))
-        print('\n')
+        print('First frame time offset: {}s'.format(time_offset))
+        print('First frame confidence: {}'.format(frame.confidence))
+        print('')
 
 '''
 # Analyze an image and print the Google Image API response
@@ -852,5 +853,3 @@ if __name__ == '__main__':
     #        b. Link key words to documents / files
     #     4. Create a do_query that allows you to search all output
     #        a. Show the files, text, etc related to the query
-
-       

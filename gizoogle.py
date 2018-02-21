@@ -1,11 +1,12 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-#
+
 # Giz00gle - Google API Testing and Evaluation. The primary libraries
 # that are tested incldue the Google Speech API, VideoIntelligence API
 # Translation API, and Image API
 #
-# CAO: February 20th, 2017
+#
+# CAO: 1826 February 4th, 2017
 #
 #################################################################
 
@@ -298,7 +299,7 @@ class GooglePrompt(Cmd):
 def convert_to_flac(old, new):
     ff = FFmpeg(
             inputs={old: None},
-            outputs={new: '-ac 1'})
+            outputs={new: '-y -ac 1'})
     ff.run()
 
 '''
@@ -307,7 +308,7 @@ def convert_to_flac(old, new):
 def convert_to_audio(old, new):
     ff = FFmpeg(
             inputs={old: None},
-            outputs={new: '-acodec flac -ac 1 -bits_per_raw_sample 16 -ar 44100'})
+            outputs={new: '-y -acodec flac -ac 1 -bits_per_raw_sample 16 -ar 44100'})
     ff.run()
  
 '''
@@ -316,7 +317,7 @@ def convert_to_audio(old, new):
 def convert_to_mp4(old, new):
    ff = FFmpeg(
            inputs={old: None},
-           outputs={new: None})
+           outputs={new: '-y'})
    ff.run()   
     
 '''

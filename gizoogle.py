@@ -70,12 +70,17 @@ class GooglePrompt(Cmd):
         if path.startswith('http') or path.startswith('gs:'):
             resp = analyze_image(path, client)
         else:
-            # TODO: Check if the file exists
+            file_exists = _check_file_exists(path)           
+            if not file_exists:
+                return
+            
             with open(path, 'rb') as fp:
                 img = FileStorage(fp)
                 url = upload_file(img.read(), img.filename, img.content_type, IMAGE_STORAGE_BUCKET)
                 if url is not '':
                     resp = analyze_image(url, client)
+                else:
+                    return
                 
         # Process and extract as much data as possible. We upload to limit the
         # number of API calls. 
@@ -87,8 +92,6 @@ class GooglePrompt(Cmd):
             print_landmark_details(resp)
             print_web_details(resp)
             print_safe_search_details(resp)
-        else:
-            print('[!] Error processing image...')
     
     '''
     # Display information about the do_audio command
@@ -124,6 +127,10 @@ class GooglePrompt(Cmd):
             except:
                 try_long_run(path, client, code)
         else:
+            fileExists =_check_file_exists(path)
+            if not fileExists:
+                return 
+            
             # Convert the audio to FLAC and upload to audio bucket. Assuming
             # the file is not FLAC here. Save the file in the same path.
             base = os.path.splitext(path)[0]
@@ -142,6 +149,8 @@ class GooglePrompt(Cmd):
                         analyze_audio('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
                     except:
                         try_long_run('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
+                else:
+                    return
         
     '''
     # Display information about the do_audio command
@@ -173,12 +182,18 @@ class GooglePrompt(Cmd):
         if path.startswith('gs:'):
             analyze_video(path, client)
         else:
+            file_exists = _check_file_exists(path)
+            if not file_exists:
+                return
+            
             with open(path, 'rb') as fp:
                 video = FileStorage(fp)
                 url = upload_file(video.read(), video.filename, video.content_type, VIDEO_STORAGE_BUCKET)
                 if url is not '':
                     gs_file = url.split("/")[-1]
                     analyze_video('gs://'+VIDEO_STORAGE_BUCKET+'/'+gs_file, client)
+                else:
+                    return
 
             # Convert the video file to a mp4, then convert the video file
             # to FLAC. Unable to directly convert some formats to FLAC, so 
@@ -209,6 +224,8 @@ class GooglePrompt(Cmd):
                         analyze_audio('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
                     except:
                         try_long_run('gs://'+AUDIO_STORAGE_BUCKET+'/'+gs_file, client, code)
+                else:
+                    return
                     
     '''
     # Display information about the do_audio command
@@ -235,6 +252,10 @@ class GooglePrompt(Cmd):
         if path.startswith('http') or path.startswith('gs:'):
             pass # TODO: Fetch URL, parse w/ beautiful soup
         else:
+            file_exists = _check_file_exists(path)
+            if not file_exists:
+                return
+            
             # Read document into memory
             with open(path) as f:
                 data = f.readline()
@@ -416,16 +437,20 @@ def try_long_run(URL, client, code):
     # Auto-determine the language, translate, and transcribe in english.
     # Notify the user if a translation occured, the language detected,
     # and the confidence level that the audio is that language.
-    audio = types.RecognitionAudio(uri=URL)
-
-    config = types.RecognitionConfig(
-            encoding=enums.RecognitionConfig.AudioEncoding.FLAC,
-            profanity_filter=False,
-            sample_rate_hertz=44100,
-            language_code=code)
+    try:
+        audio = types.RecognitionAudio(uri=URL)
     
-    operation = client.long_running_recognize(config, audio)
-    resp = operation.result()
+        config = types.RecognitionConfig(
+                encoding=enums.RecognitionConfig.AudioEncoding.FLAC,
+                profanity_filter=False,
+                sample_rate_hertz=44100,
+                language_code=code)
+        
+        operation = client.long_running_recognize(config, audio)
+        resp = operation.result()
+    except:
+        print('[!] Error processing file. Check the file path!')
+        return
     
     if resp is not None:
         client = translate.Client()           
@@ -454,15 +479,19 @@ def analyze_audio(URL, client, code):
     # Auto-determine the language, translate, and transcribe in english.
     # Notify the user if a translation occured, the language detected,
     # and the confidence level that the audio is that language.
-    audio = types.RecognitionAudio(uri=URL)
-
-    config = types.RecognitionConfig(
-            encoding='FLAC',
-            profanity_filter=False,
-            sample_rate_hertz=44100,
-            language_code=code)
-
-    resp = client.recognize(config, audio)
+    try:
+        audio = types.RecognitionAudio(uri=URL)
+    
+        config = types.RecognitionConfig(
+                encoding='FLAC',
+                profanity_filter=False,
+                sample_rate_hertz=44100,
+                language_code=code)
+    
+        resp = client.recognize(config, audio)
+    except:
+        print('[!] Error processing file. Check the file path!')
+        return
     
     if resp is not None:
         client = translate.Client()           
@@ -661,7 +690,17 @@ def _get_storage_client():
 '''
 def _check_extension(filename, allowed_extensions):
     if ('.' not in filename or filename.split('.').pop().lower() not in allowed_extensions):
-        raise BadRequest("{0} has an invalid name or extension".format(filename))
+        print("[!] {0} has an invalid name or extension".format(filename))
+        return False
+    else:
+        return True
+
+def _check_file_exists(filename):
+    if not os.path.isfile(filename):
+        print('[!] {0} is not a valid file on disk'.format(filename))
+        return False
+    else:
+        return True
 
 '''
 # Generate a safe file name for upload. Name is generated based on the path
@@ -687,7 +726,10 @@ def upload_file(file_stream, filename, content_type, bucket):
     Uploads a file to a given Cloud Storage bucket and returns the public url
     to the new object.
     """
-    _check_extension(filename, ALLOWED_EXTENSIONS)
+    file_exists = _check_extension(filename, ALLOWED_EXTENSIONS)   
+    if not file_exists:
+        return
+    
     filename = _safe_filename(filename)
 
     client = _get_storage_client()
@@ -708,7 +750,7 @@ def upload_file(file_stream, filename, content_type, bucket):
 '''
 ############ START SCRIPT ###############
 '''
-# TODO: Clean up these variables with a config file --> maybe flask??
+# TODO: Clean up these variables with a config file
 IMAGE_STORAGE_BUCKET = 'image_dump_0'
 AUDIO_STORAGE_BUCKET = 'speech_dump_0'
 DOCUMENT_STORAGE_BUCKET = 'document_dump_0'
@@ -856,3 +898,6 @@ if __name__ == '__main__':
     #        b. Link key words to documents / files
     #     4. Create a do_query that allows you to search all output
     #        a. Show the files, text, etc related to the query
+
+            
+            

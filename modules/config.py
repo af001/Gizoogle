@@ -10,19 +10,19 @@ import os
 class Config():
     
     # Google Cloud Console API Key - Load
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/devnet/Downloads/Analysis-666680c8f996.json"
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/devnet/Downloads/my_json_key.json"
         
     # Google Project ID
-    PROJECT_ID = 'analysis-194418'
+    PROJECT_ID = 'my_project_id'
     
     # Project path for saving log files
-    PROJECT_PATH = '/home/devnet/analysis'
+    PROJECT_PATH = '/home/devnet/my_project_path'
     
     # Google storage buckets
-    IMAGE_STORAGE_BUCKET = 'image_dump_0'
-    AUDIO_STORAGE_BUCKET = 'speech_dump_0'
-    DOCUMENT_STORAGE_BUCKET = 'document_dump_0'
-    VIDEO_STORAGE_BUCKET = 'video_dump_0'
+    IMAGE_STORAGE_BUCKET = 'image_dump'
+    AUDIO_STORAGE_BUCKET = 'speech_dump'
+    DOCUMENT_STORAGE_BUCKET = 'document_dump'
+    VIDEO_STORAGE_BUCKET = 'video_dump'
     
     # Max content length
     MAX_CONTENT_LENGTH = 8 * 1024 * 1024

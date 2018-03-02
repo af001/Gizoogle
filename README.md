@@ -48,7 +48,7 @@ gsutil lifecycle set bucket_config.json gs://<image_bucket_name>
 gsutil lifecycle set bucket_config.json gs://<document_bucket_name>
 ```
 
-#### Modify the python script to include your project specific information
+#### Modify the modules/Config.py python script to include your project specific information
 ```python
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/dev/key.json" # Change this to your key.json
 

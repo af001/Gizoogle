@@ -14,7 +14,9 @@ Note: The gsutils will be installed with the install script.
 git clone https://github.com/af001/Gizoogle.git
 cd Gizoogle
 chmod +x install.sh
+chmod +x initialize.sh
 sudo ./install.sh
+sudo ./initialize.sh
 ```
 
 1. Follow the instructions on the screen after running the ```bash sudo ./install.sh```

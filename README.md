@@ -5,7 +5,7 @@ Experimentation with Google Cloud APIs. This is experimental and is only intende
 Note: The gsutils will be installed with the install script.
 1. Setup a project: https://cloud.google.com/dataproc/docs/guides/setup-project
 2. Take note of your project id
-3. Enable the APIS: Vision, VideoIntelligence, Speech, Translation, Storage
+3. Enable the APIs: Vision, VideoIntelligence, Speech, Translation, Storage
 4. Create a service account key and download to your computer
 5. In your project console, select IAM & admin and verify your service key account is a member of 'project owner'
 

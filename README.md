@@ -30,7 +30,7 @@ Enter a path to an rc file to update, or leave black to use [/root/.bashrc]: /ho
 ```
 2. Once the ```bash sudo ./install.sh``` script finishes, run the ```bash sudo ./initialize.sh``` script to set up your Google Cloud Platform storage buckets.
 
-#### Modify the modules/Config.py python script to include your project specific information. Your bucket names should be output to the screen after running the ```bash sudo ./initialize.sh``` script. If they are not, run ```bash gcloud```
+#### Modify the modules/Config.py python script to include your project specific information. Your bucket names should be output to the screen after running the ```bash sudo ./initialize.sh``` script. If they are not, run ```bash gsutil ls```
 ```python
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/devnet/Google/key.json" # Change this to your key.json
 

@@ -18,7 +18,7 @@ sudo ./install.sh
 sudo ./initialize.sh
 ```
 
-1. Follow the instructions on the screen after running the ```bash sudo ./install.sh```
+1. Follow the instructions on the screen after running the ```bash; sudo ./install.sh```
 ```bash
 Do you want to help improve the Google Cloud SDK(Y/n)? n
 
